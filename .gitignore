@@ -143,7 +143,3 @@ ENV/
 
 # Pre-commit hooks
 /.pre-commit-config.yaml
-core/settings.json
-cogs/ModLog/settings.json
-cogs/CogManager/settings.json
-cogs/Bank/settings.json
