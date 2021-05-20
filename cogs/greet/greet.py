@@ -42,10 +42,12 @@ class Greet(commands.Cog):
         await ctx.send(message)
 
     @greetCommand.command(name="add")
-    async def urlSource(self, ctx, greeting):
+    async def greetAdd(self, ctx, greeting):
         """Adds a greeting
 
         Parameters:
         -----------
         greeting: a greeting that may or may not include {USER} in the message
         """
+
+        USERPING = "{USER}"
