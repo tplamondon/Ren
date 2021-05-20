@@ -82,7 +82,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         return
 
 
-    async def sendWelcomeMessageChannel(self, newUser, guild: discord.guild):
+    async def sendWelcomeMessageChannel(self, newUser: discord.Member, guild: discord.guild):
         channelID = await self.config.guild(guild).KEY_WELCOME_CHANNEL()
         isSet = await self.config.guild(guild).KEY_WELCOME_CHANNEL_SET()
         #if channel isn't set
@@ -93,8 +93,8 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         message = ""
         for x in range(len(splitMessage)):
             message+=splitMessage[x]
-            if(x<len(splitMessage)):
-                message+=newUser
+            if(x<len(splitMessage)-1):
+                message+=newUser.mention
         channel = discord.utils.get(guild.channels, id=channelID)
         await channel.send(message)
         return
