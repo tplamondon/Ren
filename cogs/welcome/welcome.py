@@ -5,10 +5,12 @@ Sends welcome DMs to users that join the server.
 import asyncio
 import discord
 import logging
+import random
 
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands.context import Context
+from redbot.core.utils.chat_formatting import error, pagify, warning
 
 LOGGER = logging.getLogger("red.luicogs.Welcome")
 
@@ -20,6 +22,7 @@ KEY_LOG_LEAVE_CHANNEL = "logLeaveChannel"
 KEY_TITLE = "title"
 KEY_MESSAGE = "message"
 KEY_IMAGE = "image"
+GREETINGS = []
 
 DEFAULT_GUILD = {
     KEY_DM_ENABLED: False,
@@ -30,7 +33,9 @@ DEFAULT_GUILD = {
     KEY_TITLE: "Welcome!",
     KEY_MESSAGE: "Welcome to the server! Hope you enjoy your stay!",
     KEY_IMAGE: None,
+    GREETINGS: {}
 }
+
 
 
 class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
@@ -41,6 +46,16 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         self.bot = bot
         self.config = Config.get_conf(self, identifier=5842647, force_registration=True)
         self.config.register_guild(**DEFAULT_GUILD)
+
+
+    async def getRandomMessage(self, ctx):
+        greetings = await self.config.guild(ctx.guild).greetings()
+        numGreetings = len(greetings)
+        if(numGreetings == 0):
+            return "Welcome to the server {USER}"
+        else:
+            return greetings[random.randint(0, numGreetings-1)]
+
 
     # The async function that is triggered on new member join.
     @commands.Cog.listener()
@@ -131,6 +146,97 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     @checks.mod_or_permissions()
     async def welcome(self, ctx: Context):
         """Server welcome message settings."""
+
+
+    @checks.mod_or_permissions()
+    @welcome.command(name="add")
+    async def greetAdd(self, ctx, name):
+        """
+        Interactively configure the contents of the greeting.
+
+        Parameters:
+        -----------
+        name: name of the greeting
+        """
+        def check(message: discord.Message):
+            return message.author == ctx.message.author and message.channel == ctx.message.channel
+
+        try:
+            greeting = await self.bot.wait_for("message", check=check, timeout=30.0)
+        except asyncio.TimeoutError:
+            await ctx.send("No response received, not setting anything!")
+            return
+
+        if len(greeting.content) > 2048:
+            await ctx.send("Your message is too long!")
+            return
+
+        greetings = await self.config.guild(ctx.guild).greetings()
+
+        for greetingTuple in greetings:
+            if greetingTuple[0] == name:
+                await ctx.send(warning("This greeting already exists, overwrite it? Please type 'yes' to overwrite"))
+                try:
+                    response = await self.bot.wait_for("message", timeout=30.0, check=check)
+                except asyncio.TimeoutError:
+                    await ctx.send("You took too long, not overwriting")
+                    return
+
+                if response.content.lower() != "yes":
+                    await ctx.send("Not overwriting the greeting")
+                    return
+        #save the greetings
+        saveGreeting = (name, greeting)
+        greetings.append(saveGreeting)
+        await self.config.guild(ctx.guild).greetings.set(greetings)
+        return
+
+    @checks.mod_or_permissions()
+    @welcome.command(name="remove")
+    async def greetRemove(self, ctx, name):
+        """
+        removes a greeting
+
+        Parameters:
+        -----------
+        name: name of the greeting
+        """
+        def check(message: discord.Message):
+            return message.author == ctx.message.author and message.channel == ctx.message.channel
+        greetings = await self.config.guild(ctx.guild).greetings()
+
+        for greetingTuple in greetings:
+            if greetingTuple[0] == name:
+                await ctx.send(warning("Are you sure you wish to delete this greeting?"))
+                try:
+                    response = await self.bot.wait_for("message", timeout=30.0, check=check)
+                except asyncio.TimeoutError:
+                    await ctx.send("You took too long, not overwriting")
+                    return
+
+                if response.content.lower() != "yes":
+                    await ctx.send("Not overwriting the greeting")
+                    return
+        #save the greetings
+        saveGreeting = (name, greeting)
+        greetings.append(saveGreeting)
+        await self.config.guild(ctx.guild).greetings.set(greetings)
+        return
+
+    @checks.mod_or_permissions()
+    @welcome.command(name="list")
+    async def greetList(self, ctx):
+        greetings = await self.config.guild(ctx.guild).greetings()
+
+        if len(greetings) == 0:
+            await ctx.send("There are no greetings, please add some first!")
+            return
+
+
+        pageList = []
+        pages = list(pagify(msg, page_length=500))
+        totalPages = len(pages)
+
 
     # [p]welcome setmessage
     @welcome.command(name="message", aliases=["msg"])
