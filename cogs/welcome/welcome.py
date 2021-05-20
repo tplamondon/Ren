@@ -35,7 +35,9 @@ DEFAULT_GUILD = {
     KEY_TITLE: "Welcome!",
     KEY_MESSAGE: "Welcome to the server! Hope you enjoy your stay!",
     KEY_IMAGE: None,
-    "greetings": []
+    "greetings": [],
+    "KEY_WELCOME_CHANNEL": None,
+    "KEY_WELCOME_CHANNEL_SET": False
 }
 
 
@@ -67,6 +69,15 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     @commands.Cog.listener()
     async def on_member_remove(self, leaveMember: discord.Member):
         await self.logServerLeave(leaveMember)
+
+    #This async function is to look for if the welcome channel was removed
+    @commands.Cog.listener()
+    async def on_channel_remove(self, removedChannel: discord.TextChannel):
+        guild = removedChannel.guild
+        welcomeID = await self.config.guild(guild).KEY_WELCOME_CHANNEL_SET()
+        if removedChannel.id == welcomeID:
+            await self.config.guild(guild).KEY_WELCOME_CHANNEL_SET.set(False)
+        return
 
     async def sendWelcomeMessage(self, newUser, test=False):
         """Sends the welcome message in DM."""
@@ -149,6 +160,25 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     async def welcome(self, ctx: Context):
         """Server welcome message settings."""
 
+
+    @checks.mod_or_permissions()
+    @welcome.command(name="welcomechannel")
+    async def welcomeChannelSet(self, ctx, channel: discord.TextChannel):
+        """
+        Set the welcome channel
+
+        Parameters:
+        -----------
+        channel: The text channel to set welcome's to
+        """
+        if not isinstance(channel, discord.TextChannel):
+            return
+
+        await self.config.guild(ctx.guild).KEY_WELCOME_CHANNEL.set(channel.id)
+        await self.config.guild(ctx.guild).KEY_WELCOME_CHANNEL_SET.set(True)
+        await ctx.send(f"Channel set to {channel}")
+
+        return
 
     @checks.mod_or_permissions()
     @welcome.command(name="add")
