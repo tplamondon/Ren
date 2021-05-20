@@ -56,6 +56,7 @@ class Greet(commands.Cog):
                 message+=discord.Member
         await ctx.send(message)
 
+    @checks.mod
     @greetCommand.command(name="add")
     async def greetAdd(self, ctx, greeting):
         """Adds a greeting
