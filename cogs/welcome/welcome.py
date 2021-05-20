@@ -216,7 +216,7 @@ We hope you enjoy your stay~
     @welcome.command(name="add")
     async def greetAdd(self, ctx, name):
         """
-        Add a new greeting, please add name to the passed field
+        Add a new greeting, please add name to the passed field. In the message, include '{USER}' for that to be replaced with a ping to the new user
 
         Parameters:
         -----------
@@ -253,6 +253,7 @@ We hope you enjoy your stay~
         #save the greetings
         saveGreeting = (name, greeting.content)
         greetings.append(saveGreeting)
+        await greeting.add_reaction('✅')
         await self.config.guild(ctx.guild).greetings.set(greetings)
         return
 
@@ -260,7 +261,7 @@ We hope you enjoy your stay~
     @welcome.command(name="remove")
     async def greetRemove(self, ctx, name):
         """
-        Removes a greeting. Please pass a name as well
+        Removes a greeting. Please pass name of greeting to remove
 
         Parameters:
         -----------
@@ -273,7 +274,7 @@ We hope you enjoy your stay~
         tuple = ()
         for greetingTuple in greetings:
             if greetingTuple[0] == name:
-                await ctx.send(warning("Are you sure you wish to delete this greeting?"))
+                await ctx.send(warning("Are you sure you wish to delete this greeting? Respond with 'yes' if yes"))
                 tuple = greetingTuple
                 try:
                     response = await self.bot.wait_for("message", timeout=30.0, check=check)
@@ -286,6 +287,7 @@ We hope you enjoy your stay~
                     return
         #delete the greeting
         greetings.remove(tuple)
+        await ctx.send(f"{name} removed from list")
         await self.config.guild(ctx.guild).greetings.set(greetings)
         return
 
