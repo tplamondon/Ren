@@ -52,8 +52,8 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         self.config.register_guild(**DEFAULT_GUILD)
 
 
-    async def getRandomMessage(self, ctx):
-        greetings = await self.config.guild(ctx.guild).greetings()
+    async def getRandomMessage(self, guild):
+        greetings = await self.config.guild(guild).greetings()
         numGreetings = len(greetings)
         if(numGreetings == 0):
             return "Welcome to the server {USER}"
@@ -64,7 +64,9 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     # The async function that is triggered on new member join.
     @commands.Cog.listener()
     async def on_member_join(self, newMember: discord.Member):
-        await self.sendWelcomeMessage(newMember)
+        guild = newMember.guild
+        await self.sendWelcomeMessageChannel(newMember, guild)
+        #await self.sendWelcomeMessage(newMember)
 
     @commands.Cog.listener()
     async def on_member_remove(self, leaveMember: discord.Member):
@@ -77,6 +79,24 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         welcomeID = await self.config.guild(guild).KEY_WELCOME_CHANNEL_SET()
         if removedChannel.id == welcomeID:
             await self.config.guild(guild).KEY_WELCOME_CHANNEL_SET.set(False)
+        return
+
+
+    async def sendWelcomeMessageChannel(self, newUser, guild: discord.guild):
+        channelID = await self.config.guild(guild).KEY_WELCOME_CHANNEL()
+        isSet = await self.config.guild(guild).KEY_WELCOME_CHANNEL_SET()
+        #if channel isn't set
+        if not isSet:
+            return
+        rawMessage = await self.getRandomMessage(guild)
+        splitMessage  = rawMessage.split("{USER}")
+        message = ""
+        for x in range(len(splitMessage)):
+            message+=splitMessage[x]
+            if(x<len(splitMessage)):
+                message+=newUser
+        channel = discord.utils.get(guild.channels, id=channelID)
+        await channel.send(message)
         return
 
     async def sendWelcomeMessage(self, newUser, test=False):
