@@ -37,7 +37,7 @@ DEFAULT_GUILD = {
     KEY_IMAGE: None,
     "greetings": [],
     "KEY_WELCOME_CHANNEL": None,
-    "KEY_WELCOME_CHANNEL_SET": False
+    "KEY_WELCOME_CHANNEL_SET": False,
 }
 
 
@@ -58,7 +58,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         if(numGreetings == 0):
             return "Welcome to the server {USER}"
         else:
-            return greetings[random.randint(0, numGreetings-1)]
+            return greetings[random.randint(0, numGreetings-1)][1]
 
 
     # The async function that is triggered on new member join.
@@ -76,8 +76,13 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     @commands.Cog.listener()
     async def on_channel_remove(self, removedChannel: discord.TextChannel):
         guild = removedChannel.guild
-        welcomeID = await self.config.guild(guild).KEY_WELCOME_CHANNEL_SET()
-        if removedChannel.id == welcomeID:
+        #the channel to post welcome stuff in
+        welcomeIDSet = await self.config.guild(guild).KEY_WELCOME_CHANNEL_SET()
+        welcomeID = await self.config.guild(guild).KEY_WELCOME_CHANNEL()
+        #the channel msg should point to
+        welcomeLinkIDSet = await self.config.guild(guild).KEY_WELCOME_CHANNEL_LINK_SET()
+        welcomeLinkID = await self.config.guild(guild).KEY_WELCOME_CHANNEL_LINK()
+        if welcomeIDSet and removedChannel.id == welcomeID:
             await self.config.guild(guild).KEY_WELCOME_CHANNEL_SET.set(False)
         return
 
@@ -88,6 +93,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         #if channel isn't set
         if not isSet:
             return
+        channel = discord.utils.get(guild.channels, id=channelID)
         rawMessage = await self.getRandomMessage(guild)
         splitMessage  = rawMessage.split("{USER}")
         message = ""
@@ -95,8 +101,14 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
             message+=splitMessage[x]
             if(x<len(splitMessage)-1):
                 message+=newUser.mention
-        channel = discord.utils.get(guild.channels, id=channelID)
-        await channel.send(message)
+        fullMessage = f"""{message} Welcome to SFU Anime Club's Discord!
+
+Please check out <#225044755887685632> for all of our basic information and rules, and feel free to introduce yourself with the pinned template in this channel!
+
+We hope you enjoy your stay~
+
+=========================================================="""
+        await channel.send(fullMessage)
         return
 
     async def sendWelcomeMessage(self, newUser, test=False):
@@ -182,7 +194,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
 
 
     @checks.mod_or_permissions()
-    @welcome.command(name="welcomechannel")
+    @welcome.command(name="channel")
     async def welcomeChannelSet(self, ctx, channel: discord.TextChannel):
         """
         Set the welcome channel
@@ -485,4 +497,5 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     async def test(self, ctx: Context):
         """Test the welcome DM by sending a DM to you."""
         await self.sendWelcomeMessage(ctx.message.author, test=True)
+        #await self.sendWelcomeMessageChannel(ctx.message.author, ctx.guild)
         await ctx.send("If this server has been configured, you should have received a DM.")
