@@ -8,6 +8,7 @@ from redbot.core import Config, checks, commands, data_manager
 from redbot.core.bot import Red
 from redbot.core.commands.context import Context
 import discord
+import random
 
 
 
@@ -25,8 +26,14 @@ class Greet(commands.Cog):
         self.config.register_member(**default_guild)
 
 
-    async def getRandomMessage(self):
-        return ""
+    async def getRandomMessage(self, ctx):
+        greetings = await self.config.guild(ctx.guild).greetings()
+        numGreetings = len(greetings)
+        if(numGreetings == 0):
+            return "Welcome to the server {USER}"
+        else:
+            return greetings[random.randint(0, numGreetings-1)]
+
 
 
     @commands.group(name="greet", invoke_without_command=True)
@@ -40,7 +47,7 @@ class Greet(commands.Cog):
         USERPING = "{USER}"
 
         await ctx.trigger_typing()
-        rawMessage =  await self.getRandomMessage()
+        rawMessage =  await self.getRandomMessage(ctx)
         splitMessage = rawMessage.split("{USER}")
         message = ""
         for x in range(len(splitMessage)):
