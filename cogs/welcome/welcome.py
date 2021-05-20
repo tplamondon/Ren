@@ -7,10 +7,12 @@ import discord
 import logging
 import random
 
-from redbot.core import Config, checks, commands
+from redbot.core import Config, checks, commands, data_manager
 from redbot.core.bot import Red
 from redbot.core.commands.context import Context
 from redbot.core.utils.chat_formatting import error, pagify, warning
+from redbot.core.utils.menus import DEFAULT_CONTROLS, menu
+from redbot.core.utils import AsyncIter
 
 LOGGER = logging.getLogger("red.luicogs.Welcome")
 
@@ -33,7 +35,7 @@ DEFAULT_GUILD = {
     KEY_TITLE: "Welcome!",
     KEY_MESSAGE: "Welcome to the server! Hope you enjoy your stay!",
     KEY_IMAGE: None,
-    GREETINGS: {}
+    "GREETINGS": []
 }
 
 
@@ -205,21 +207,22 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
             return message.author == ctx.message.author and message.channel == ctx.message.channel
         greetings = await self.config.guild(ctx.guild).greetings()
 
+        tuple = ()
         for greetingTuple in greetings:
             if greetingTuple[0] == name:
                 await ctx.send(warning("Are you sure you wish to delete this greeting?"))
+                tuple = greetingTuple
                 try:
                     response = await self.bot.wait_for("message", timeout=30.0, check=check)
                 except asyncio.TimeoutError:
-                    await ctx.send("You took too long, not overwriting")
+                    await ctx.send("You took too long, not deleting")
                     return
 
                 if response.content.lower() != "yes":
-                    await ctx.send("Not overwriting the greeting")
+                    await ctx.send("Not deleting")
                     return
-        #save the greetings
-        saveGreeting = (name, greeting)
-        greetings.append(saveGreeting)
+        #delete the greeting
+        greetings.remove(tuple)
         await self.config.guild(ctx.guild).greetings.set(greetings)
         return
 
@@ -232,10 +235,19 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
             await ctx.send("There are no greetings, please add some first!")
             return
 
+        for greeting in greetings:
+            msg += f"{greeting[0]}: {greeting[1]}\n"
 
         pageList = []
         pages = list(pagify(msg, page_length=500))
         totalPages = len(pages)
+        async for pageNumber, page in AsyncIter(pages).enumerate(start=1):
+            embed = discord.Embed(
+                title=f"Server greetings changes for {ctx.guild.name}", description=page
+            )
+            embed.set_footer(text=f"Page {pageNumber}/{totalPages}")
+            pageList.append(embed)
+        await menu(ctx, pageList, DEFAULT_CONTROLS)
 
 
     # [p]welcome setmessage
