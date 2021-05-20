@@ -35,7 +35,7 @@ DEFAULT_GUILD = {
     KEY_TITLE: "Welcome!",
     KEY_MESSAGE: "Welcome to the server! Hope you enjoy your stay!",
     KEY_IMAGE: None,
-    "greetings": [],
+    "KEY_GREETINGS": [],
     "KEY_WELCOME_CHANNEL": None,
     "KEY_WELCOME_CHANNEL_SET": False,
 }
@@ -51,7 +51,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         self.config.register_guild(**DEFAULT_GUILD)
 
     async def getRandomMessage(self, guild):
-        greetings = await self.config.guild(guild).greetings()
+        greetings = await self.config.guild(guild).KEY_GREETINGS()
         numGreetings = len(greetings)
         if numGreetings == 0:
             return "Welcome to the server {USER}"
@@ -232,7 +232,7 @@ We hope you enjoy your stay~
             await ctx.send("Your message is too long!")
             return
 
-        greetings = await self.config.guild(ctx.guild).greetings()
+        greetings = await self.config.guild(ctx.guild).KEY_GREETINGS()
 
         for greetingTuple in greetings:
             if greetingTuple[0] == name:
@@ -254,7 +254,7 @@ We hope you enjoy your stay~
         saveGreeting = (name, greeting.content)
         greetings.append(saveGreeting)
         await greeting.add_reaction("✅")
-        await self.config.guild(ctx.guild).greetings.set(greetings)
+        await self.config.guild(ctx.guild).KEY_GREETINGS.set(greetings)
         return
 
     @checks.mod_or_permissions()
@@ -271,7 +271,7 @@ We hope you enjoy your stay~
         def check(message: discord.Message):
             return message.author == ctx.message.author and message.channel == ctx.message.channel
 
-        greetings = await self.config.guild(ctx.guild).greetings()
+        greetings = await self.config.guild(ctx.guild).KEY_GREETINGS()
 
         tuple = ()
         for greetingTuple in greetings:
@@ -294,13 +294,13 @@ We hope you enjoy your stay~
         # delete the greeting
         greetings.remove(tuple)
         await ctx.send(f"{name} removed from list")
-        await self.config.guild(ctx.guild).greetings.set(greetings)
+        await self.config.guild(ctx.guild).KEY_GREETINGS.set(greetings)
         return
 
     @checks.mod_or_permissions()
     @welcome.command(name="list")
     async def greetList(self, ctx):
-        greetings = await self.config.guild(ctx.guild).greetings()
+        greetings = await self.config.guild(ctx.guild).KEY_GREETINGS()
 
         if len(greetings) == 0:
             await ctx.send("There are no greetings, please add some first!")
