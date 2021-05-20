@@ -41,7 +41,6 @@ DEFAULT_GUILD = {
 }
 
 
-
 class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     """Send a welcome DM on server join."""
 
@@ -51,56 +50,53 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         self.config = Config.get_conf(self, identifier=5842647, force_registration=True)
         self.config.register_guild(**DEFAULT_GUILD)
 
-
     async def getRandomMessage(self, guild):
         greetings = await self.config.guild(guild).greetings()
         numGreetings = len(greetings)
-        if(numGreetings == 0):
+        if numGreetings == 0:
             return "Welcome to the server {USER}"
         else:
-            return greetings[random.randint(0, numGreetings-1)][1]
-
+            return greetings[random.randint(0, numGreetings - 1)][1]
 
     # The async function that is triggered on new member join.
     @commands.Cog.listener()
     async def on_member_join(self, newMember: discord.Member):
         guild = newMember.guild
         await self.sendWelcomeMessageChannel(newMember, guild)
-        #await self.sendWelcomeMessage(newMember)
+        # await self.sendWelcomeMessage(newMember)
 
     @commands.Cog.listener()
     async def on_member_remove(self, leaveMember: discord.Member):
         await self.logServerLeave(leaveMember)
 
-    #This async function is to look for if the welcome channel was removed
+    # This async function is to look for if the welcome channel was removed
     @commands.Cog.listener()
     async def on_channel_remove(self, removedChannel: discord.TextChannel):
         guild = removedChannel.guild
-        #the channel to post welcome stuff in
+        # the channel to post welcome stuff in
         welcomeIDSet = await self.config.guild(guild).KEY_WELCOME_CHANNEL_SET()
         welcomeID = await self.config.guild(guild).KEY_WELCOME_CHANNEL()
-        #the channel msg should point to
+        # the channel msg should point to
         welcomeLinkIDSet = await self.config.guild(guild).KEY_WELCOME_CHANNEL_LINK_SET()
         welcomeLinkID = await self.config.guild(guild).KEY_WELCOME_CHANNEL_LINK()
         if welcomeIDSet and removedChannel.id == welcomeID:
             await self.config.guild(guild).KEY_WELCOME_CHANNEL_SET.set(False)
         return
 
-
     async def sendWelcomeMessageChannel(self, newUser: discord.Member, guild: discord.guild):
         channelID = await self.config.guild(guild).KEY_WELCOME_CHANNEL()
         isSet = await self.config.guild(guild).KEY_WELCOME_CHANNEL_SET()
-        #if channel isn't set
+        # if channel isn't set
         if not isSet:
             return
         channel = discord.utils.get(guild.channels, id=channelID)
         rawMessage = await self.getRandomMessage(guild)
-        splitMessage  = rawMessage.split("{USER}")
+        splitMessage = rawMessage.split("{USER}")
         message = ""
         for x in range(len(splitMessage)):
-            message+=splitMessage[x]
-            if(x<len(splitMessage)-1):
-                message+=newUser.mention
+            message += splitMessage[x]
+            if x < len(splitMessage) - 1:
+                message += newUser.mention
         fullMessage = f"""{message} Welcome to SFU Anime Club's Discord!
 
 Please check out <#225044755887685632> for all of our basic information and rules, and feel free to introduce yourself with the pinned template in this channel!
@@ -192,7 +188,6 @@ We hope you enjoy your stay~
     async def welcome(self, ctx: Context):
         """Server welcome message settings."""
 
-
     @checks.mod_or_permissions()
     @welcome.command(name="channel")
     async def welcomeChannelSet(self, ctx, channel: discord.TextChannel):
@@ -222,6 +217,7 @@ We hope you enjoy your stay~
         -----------
         name: name of the greeting
         """
+
         def check(message: discord.Message):
             return message.author == ctx.message.author and message.channel == ctx.message.channel
 
@@ -240,7 +236,11 @@ We hope you enjoy your stay~
 
         for greetingTuple in greetings:
             if greetingTuple[0] == name:
-                await ctx.send(warning("This greeting already exists, overwrite it? Please type 'yes' to overwrite"))
+                await ctx.send(
+                    warning(
+                        "This greeting already exists, overwrite it? Please type 'yes' to overwrite"
+                    )
+                )
                 try:
                     response = await self.bot.wait_for("message", timeout=30.0, check=check)
                 except asyncio.TimeoutError:
@@ -250,10 +250,10 @@ We hope you enjoy your stay~
                 if response.content.lower() != "yes":
                     await ctx.send("Not overwriting the greeting")
                     return
-        #save the greetings
+        # save the greetings
         saveGreeting = (name, greeting.content)
         greetings.append(saveGreeting)
-        await greeting.add_reaction('✅')
+        await greeting.add_reaction("✅")
         await self.config.guild(ctx.guild).greetings.set(greetings)
         return
 
@@ -267,14 +267,20 @@ We hope you enjoy your stay~
         -----------
         name: name of the greeting
         """
+
         def check(message: discord.Message):
             return message.author == ctx.message.author and message.channel == ctx.message.channel
+
         greetings = await self.config.guild(ctx.guild).greetings()
 
         tuple = ()
         for greetingTuple in greetings:
             if greetingTuple[0] == name:
-                await ctx.send(warning("Are you sure you wish to delete this greeting? Respond with 'yes' if yes"))
+                await ctx.send(
+                    warning(
+                        "Are you sure you wish to delete this greeting? Respond with 'yes' if yes"
+                    )
+                )
                 tuple = greetingTuple
                 try:
                     response = await self.bot.wait_for("message", timeout=30.0, check=check)
@@ -285,7 +291,7 @@ We hope you enjoy your stay~
                 if response.content.lower() != "yes":
                     await ctx.send("Not deleting")
                     return
-        #delete the greeting
+        # delete the greeting
         greetings.remove(tuple)
         await ctx.send(f"{name} removed from list")
         await self.config.guild(ctx.guild).greetings.set(greetings)
@@ -314,7 +320,6 @@ We hope you enjoy your stay~
             embed.set_footer(text=f"Page {pageNumber}/{totalPages}")
             pageList.append(embed)
         await menu(ctx, pageList, DEFAULT_CONTROLS)
-
 
     # [p]welcome setmessage
     @welcome.command(name="message", aliases=["msg"])
@@ -499,5 +504,5 @@ We hope you enjoy your stay~
     async def test(self, ctx: Context):
         """Test the welcome DM by sending a DM to you."""
         await self.sendWelcomeMessage(ctx.message.author, test=True)
-        #await self.sendWelcomeMessageChannel(ctx.message.author, ctx.guild)
+        # await self.sendWelcomeMessageChannel(ctx.message.author, ctx.guild)
         await ctx.send("If this server has been configured, you should have received a DM.")
