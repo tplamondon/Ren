@@ -35,7 +35,7 @@ DEFAULT_GUILD = {
     KEY_TITLE: "Welcome!",
     KEY_MESSAGE: "Welcome to the server! Hope you enjoy your stay!",
     KEY_IMAGE: None,
-    "GREETINGS": []
+    "greetings": []
 }
 
 
@@ -154,7 +154,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     @welcome.command(name="add")
     async def greetAdd(self, ctx, name):
         """
-        Interactively configure the contents of the greeting.
+        Add a new greeting, please add name to the passed field
 
         Parameters:
         -----------
@@ -163,6 +163,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         def check(message: discord.Message):
             return message.author == ctx.message.author and message.channel == ctx.message.channel
 
+        await ctx.send("What would you like the greeting message to be?")
         try:
             greeting = await self.bot.wait_for("message", check=check, timeout=30.0)
         except asyncio.TimeoutError:
@@ -188,7 +189,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
                     await ctx.send("Not overwriting the greeting")
                     return
         #save the greetings
-        saveGreeting = (name, greeting)
+        saveGreeting = (name, greeting.content)
         greetings.append(saveGreeting)
         await self.config.guild(ctx.guild).greetings.set(greetings)
         return
@@ -197,7 +198,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     @welcome.command(name="remove")
     async def greetRemove(self, ctx, name):
         """
-        removes a greeting
+        Removes a greeting. Please pass a name as well
 
         Parameters:
         -----------
@@ -235,6 +236,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
             await ctx.send("There are no greetings, please add some first!")
             return
 
+        msg = ""
         for greeting in greetings:
             msg += f"{greeting[0]}: {greeting[1]}\n"
 
