@@ -330,7 +330,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         totalPages = len(pages)
         async for pageNumber, page in AsyncIter(pages).enumerate(start=1):
             embed = discord.Embed(
-                title=f"Server greetings changes for {ctx.guild.name}", description=page
+                title=f"Welcome greetings changes for {ctx.guild.name}", description=page
             )
             embed.set_footer(text=f"Page {pageNumber}/{totalPages}")
             pageList.append(embed)
