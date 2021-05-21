@@ -94,37 +94,20 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
 
         joinLogEnabled = await self.config.guild(newUser.guild).logJoinEnabled()
         joinLogChannel = await self.config.guild(newUser.guild).logJoinChannel()
-        errorChannel = discord.utils.get(
-            newUser.guild.text_channels, id=joinLogChannel
-        )
         try:
             await channel.send(message)
         except (discord.Forbidden, discord.HTTPException) as errorMsg:
             LOGGER.error(
-                "Could not send message, the user may have"
-                "turned off DM's from this server."
-                " Also, make sure the server has a title "
-                "and message set!",
+                "Could not send message, please make sure the bot "
+                "has enough permissions to send messages to this "
+                "channel!"
                 exc_info=True,
             )
             LOGGER.error(errorMsg)
-            if joinLogEnabled and errorChannel:
-                await errorChannel.send(
-                    ":bangbang: ``Server Welcome:`` User "
-                    f"{newUser.name}#{newUser.discriminator} "
-                    f"({newUser.id}) has joined. Could not send "
-                    "DM!"
-                )
-                await errorChannel.send(errorMsg)
         else:
-            if joinLogEnabled and errorChannel:
-                await errorChannel.send(
-                    f":o: ``Server Welcome:`` User {newUser.name}#"
-                    f"{newUser.discriminator} ({newUser.id}) has "
-                    "joined. DM sent."
-                )
+            if joinLogEnabled:
                 LOGGER.info(
-                    "User %s#%s (%s) has joined.  DM sent.",
+                    "User %s#%s (%s) has joined. Posted welcome message.",
                     newUser.name,
                     newUser.discriminator,
                     newUser.id,
@@ -312,7 +295,6 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
                 await ctx.send("Not deleting")
                 return
 
-        if name in greetings:
             # delete the greeting
             del greetings[name]
             await ctx.send(f"{name} removed from list")
