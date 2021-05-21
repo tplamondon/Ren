@@ -55,7 +55,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     async def getRandomMessage(self, guild):
         greetings = await self.config.guild(guild).greetings()
         numGreetings = len(greetings)
-        if numGreetings == 0:
+        if not greetings:
             return "Welcome to the server {USER}"
         else:
             return greetings[random.randint(0, numGreetings - 1)][1]
