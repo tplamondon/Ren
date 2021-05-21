@@ -209,8 +209,6 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         -----------
         channel: The text channel to set welcome's to
         """
-        if not isinstance(channel, discord.TextChannel):
-            return
 
         await self.config.guild(ctx.guild).welcomeChannel.set(channel.id)
         await self.config.guild(ctx.guild).welcomeChannelSet.set(True)
