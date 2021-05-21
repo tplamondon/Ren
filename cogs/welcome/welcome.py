@@ -304,7 +304,7 @@ We hope you enjoy your stay~
     async def greetList(self, ctx):
         greetings = await self.config.guild(ctx.guild).greetings()
 
-        if len(greetings) == 0:
+        if not greetings:
             await ctx.send("There are no greetings, please add some first!")
             return
 
