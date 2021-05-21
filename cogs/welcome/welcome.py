@@ -209,7 +209,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         channel: The text channel to set welcome's to. If not passed anything, will remove the welcome channel
         """
         if not channel:
-            #channel == None
+            # channel == None
             await self.config.guild(ctx.guild).welcomeChannelSet.set(False)
             await ctx.send("Welcome channel has been removed")
             return
