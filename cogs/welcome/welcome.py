@@ -253,7 +253,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
             return
 
         # check for if the message with a replaced {USER} will be too long
-        tempmsg = greeting.contents.replace("{USER}", ctx.author.mention)
+        tempmsg = greeting.content.replace("{USER}", ctx.author.mention)
         if len(tempmsg) > MAX_MESSAGE_LENGTH:
             await ctx.send("Your message is too long!")
             return
