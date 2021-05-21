@@ -498,5 +498,5 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     async def test(self, ctx: Context):
         """Test the welcome DM by sending a DM to you."""
         await self.sendWelcomeMessage(ctx.message.author, test=True)
-        await self.sendWelcomeMessageChannel(ctx.message.author)
+        await self.sendWelcomeMessageChannel(ctx.message.author) #TODO remove this when done testing
         await ctx.send("If this server has been configured, you should have received a DM.")
