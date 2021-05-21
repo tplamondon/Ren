@@ -72,7 +72,9 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
 
     # This async function is to look for if the welcome channel was removed
     @commands.Cog.listener()
-    async def on_channel_remove(self, removedChannel: discord.TextChannel):
+    async def on_guild_channel_delete(self, removedChannel: discord.TextChannel):
+        if not isinstance(removedChannel, discord.TextChannel):
+            return
         guild = removedChannel.guild
         # the channel to post welcome stuff in
         welcomeIDSet = await self.config.guild(guild).welcomeChannelSet()
@@ -95,8 +97,6 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         message = rawMessage.replace("{USER}", newUser.mention)
         splitMessage = rawMessage.split("{USER}")
 
-        joinLogEnabled = await self.config.guild(newUser.guild).logJoinEnabled()
-        joinLogChannel = await self.config.guild(newUser.guild).logJoinChannel()
         try:
             await channel.send(message)
         except (discord.Forbidden, discord.HTTPException) as errorMsg:
@@ -108,13 +108,12 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
             )
             LOGGER.error(errorMsg)
         else:
-            if joinLogEnabled:
-                LOGGER.info(
-                    "User %s#%s (%s) has joined. Posted welcome message.",
-                    newUser.name,
-                    newUser.discriminator,
-                    newUser.id,
-                )
+            LOGGER.info(
+                "User %s#%s (%s) has joined. Posted welcome message.",
+                newUser.name,
+                newUser.discriminator,
+                newUser.id,
+            )
 
         return
 
@@ -520,5 +519,4 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     async def test(self, ctx: Context):
         """Test the welcome DM by sending a DM to you."""
         await self.sendWelcomeMessage(ctx.message.author, test=True)
-        await self.sendWelcomeMessageChannel(ctx.message.author)
         await ctx.send("If this server has been configured, you should have received a DM.")
