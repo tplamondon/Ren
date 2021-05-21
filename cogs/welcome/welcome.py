@@ -339,8 +339,9 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
             return
 
         msg = ""
-        for greeting in greetings:
-            msg += f"{greeting[0]}: {greeting[1]}\n"
+
+        for key in greetings:
+            msg += f"{key}: {greetings[key]}\n"
 
         pageList = []
         pages = list(pagify(msg, page_length=500))
