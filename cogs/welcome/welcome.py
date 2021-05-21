@@ -99,14 +99,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
             message += splitMessage[x]
             if x < len(splitMessage) - 1:
                 message += newUser.mention
-        fullMessage = f"""{message} Welcome to SFU Anime Club's Discord!
-
-Please check out <#225044755887685632> for all of our basic information and rules, and feel free to introduce yourself with the pinned template in this channel!
-
-We hope you enjoy your stay~
-
-=========================================================="""
-        await channel.send(fullMessage)
+        await channel.send(message)
         return
 
     async def sendWelcomeMessage(self, newUser, test=False):
