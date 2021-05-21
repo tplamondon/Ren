@@ -506,5 +506,5 @@ We hope you enjoy your stay~
     async def test(self, ctx: Context):
         """Test the welcome DM by sending a DM to you."""
         await self.sendWelcomeMessage(ctx.message.author, test=True)
-        await self.sendWelcomeMessageChannel(ctx.message.author, ctx.guild)
+        await self.sendWelcomeMessageChannel(ctx.message.author)
         await ctx.send("If this server has been configured, you should have received a DM.")
