@@ -63,8 +63,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     # The async function that is triggered on new member join.
     @commands.Cog.listener()
     async def on_member_join(self, newMember: discord.Member):
-        guild = newMember.guild
-        await self.sendWelcomeMessageChannel(newMember, guild)
+        await self.sendWelcomeMessageChannel(newMember)
         await self.sendWelcomeMessage(newMember)
 
     @commands.Cog.listener()
@@ -85,7 +84,8 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
             await self.config.guild(guild).welcomeChannelSet.set(False)
         return
 
-    async def sendWelcomeMessageChannel(self, newUser: discord.Member, guild: discord.guild):
+    async def sendWelcomeMessageChannel(self, newUser: discord.Member):
+        guild = newUser.guild
         channelID = await self.config.guild(guild).welcomeChannel()
         isSet = await self.config.guild(guild).welcomeChannelSet()
         # if channel isn't set
