@@ -201,14 +201,19 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
 
     @checks.mod_or_permissions()
     @welcome.command(name="channel")
-    async def welcomeChannelSet(self, ctx: Context, channel: discord.TextChannel):
+    async def welcomeChannelSet(self, ctx: Context, channel: discord.TextChannel = None):
         """
         Set the welcome channel
 
         Parameters:
         -----------
-        channel: The text channel to set welcome's to
+        channel: The text channel to set welcome's to. If not passed anything, will remove the welcome channel
         """
+        if not channel:
+            #channel == None
+            await self.config.guild(ctx.guild).welcomeChannelSet.set(False)
+            await ctx.send("Welcome channel has been removed")
+            return
 
         await self.config.guild(ctx.guild).welcomeChannel.set(channel.id)
         await self.config.guild(ctx.guild).welcomeChannelSet.set(True)
@@ -515,4 +520,5 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     async def test(self, ctx: Context):
         """Test the welcome DM by sending a DM to you."""
         await self.sendWelcomeMessage(ctx.message.author, test=True)
+        await self.sendWelcomeMessageChannel(ctx.message.author)
         await ctx.send("If this server has been configured, you should have received a DM.")
