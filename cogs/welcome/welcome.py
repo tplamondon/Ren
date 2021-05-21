@@ -7,7 +7,7 @@ import discord
 import logging
 import random
 
-from redbot.core import Config, checks, commands, data_manager
+from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands.context import Context
 from redbot.core.utils.chat_formatting import error, pagify, warning
