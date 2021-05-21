@@ -79,9 +79,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         welcomeID = await self.config.guild(guild).welcomeChannel()
         if welcomeIDSet and removedChannel.id == welcomeID:
             await self.config.guild(guild).welcomeChannelSet.set(False)
-            LOGGER.info(
-                "Changed guild's welcomeChannelSetFlag to false as channel was deleted"
-            )
+            LOGGER.info("Changed guild's welcomeChannelSetFlag to false as channel was deleted")
         return
 
     async def sendWelcomeMessageChannel(self, newUser: discord.Member):
@@ -264,7 +262,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
                 return
 
         # save the greetings
-        greetings[name] =  greeting.content
+        greetings[name] = greeting.content
         await greeting.add_reaction("✅")
         await self.config.guild(ctx.guild).greetings.set(greetings)
         return
@@ -286,9 +284,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         greetings = await self.config.guild(ctx.guild).greetings()
         if name in greetings:
             await ctx.send(
-                warning(
-                    "Are you sure you wish to delete this greeting? Respond with 'yes' if yes"
-                )
+                warning("Are you sure you wish to delete this greeting? Respond with 'yes' if yes")
             )
             try:
                 response = await self.bot.wait_for("message", timeout=30.0, check=check)
