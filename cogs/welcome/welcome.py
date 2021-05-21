@@ -93,12 +93,9 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
             return
         channel = discord.utils.get(guild.channels, id=channelID)
         rawMessage = await self.getRandomMessage(guild)
+
+        message = rawMessage.replace("{USER}", newUser.mention)
         splitMessage = rawMessage.split("{USER}")
-        message = ""
-        for x in range(len(splitMessage)):
-            message += splitMessage[x]
-            if x < len(splitMessage) - 1:
-                message += newUser.mention
 
         joinLogEnabled = await self.config.guild(newUser.guild).logJoinEnabled()
         joinLogChannel = await self.config.guild(newUser.guild).logJoinChannel()
