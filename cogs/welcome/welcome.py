@@ -100,7 +100,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
             LOGGER.error(
                 "Could not send message, please make sure the bot "
                 "has enough permissions to send messages to this "
-                "channel!"
+                "channel!",
                 exc_info=True,
             )
             LOGGER.error(errorMsg)
