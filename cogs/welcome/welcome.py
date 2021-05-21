@@ -192,7 +192,7 @@ We hope you enjoy your stay~
 
     @checks.mod_or_permissions()
     @welcome.command(name="channel")
-    async def welcomeChannelSet(self, ctx, channel: discord.TextChannel):
+    async def welcomeChannelSet(self, ctx: Context, channel: discord.TextChannel):
         """
         Set the welcome channel
 
@@ -261,7 +261,7 @@ We hope you enjoy your stay~
 
     @checks.mod_or_permissions()
     @welcome.command(name="remove")
-    async def greetRemove(self, ctx, name):
+    async def greetRemove(self, ctx: Context, name: str):
         """
         Removes a greeting. Please pass name of greeting to remove
 
