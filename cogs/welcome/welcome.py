@@ -77,11 +77,6 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         # the channel to post welcome stuff in
         welcomeIDSet = await self.config.guild(guild).welcomeChannelSet()
         welcomeID = await self.config.guild(guild).welcomeChannel()
-        # the channel msg should point to
-        welcomeLinkIDSet = await self.config.guild(guild).welcomeChannel_LINK_SET()
-        welcomeLinkID = await self.config.guild(guild).welcomeChannel_LINK()
-        if welcomeIDSet and removedChannel.id == welcomeID:
-            await self.config.guild(guild).welcomeChannelSet.set(False)
         return
 
     async def sendWelcomeMessageChannel(self, newUser: discord.Member):
