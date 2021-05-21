@@ -200,8 +200,15 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     async def welcome(self, ctx: Context):
         """Server welcome message settings."""
 
+    # [p]greetings
+    @commands.group(name="greetings")
+    @commands.guild_only()
     @checks.mod_or_permissions()
-    @welcome.command(name="channel")
+    async def greetings(self, ctx: Context):
+        """Server greetings message settings."""
+
+    @checks.mod_or_permissions()
+    @greetings.command(name="channel")
     async def welcomeChannelSet(self, ctx: Context, channel: discord.TextChannel = None):
         """
         Set the welcome channel
@@ -223,7 +230,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         return
 
     @checks.mod_or_permissions()
-    @welcome.command(name="add")
+    @greetings.command(name="add")
     async def greetAdd(self, ctx: Context, name: str):
         """
         Add a new greeting
@@ -276,7 +283,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         return
 
     @checks.mod_or_permissions()
-    @welcome.command(name="remove", aliases=["delete", "del", "rm"])
+    @greetings.command(name="remove", aliases=["delete", "del", "rm"])
     async def greetRemove(self, ctx: Context, name: str):
         """
         Remove a greeting
@@ -313,7 +320,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         return
 
     @checks.mod_or_permissions()
-    @welcome.command(name="list", aliases=["ls"])
+    @greetings.command(name="list", aliases=["ls"])
     async def greetList(self, ctx: Context):
         """
         List all greetings on the server
