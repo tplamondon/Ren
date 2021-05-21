@@ -99,7 +99,45 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
             message += splitMessage[x]
             if x < len(splitMessage) - 1:
                 message += newUser.mention
-        await channel.send(message)
+
+        joinLogEnabled = await self.config.guild(newUser.guild).logJoinEnabled()
+        joinLogChannel = await self.config.guild(newUser.guild).logJoinChannel()
+        errorChannel = discord.utils.get(
+            newUser.guild.text_channels, id=joinLogChannel
+        )
+        try:
+            await channel.send(message)
+        except (discord.Forbidden, discord.HTTPException) as errorMsg:
+            LOGGER.error(
+                "Could not send message, the user may have"
+                "turned off DM's from this server."
+                " Also, make sure the server has a title "
+                "and message set!",
+                exc_info=True,
+            )
+            LOGGER.error(errorMsg)
+            if joinLogEnabled and errorChannel:
+                await errorChannel.send(
+                    ":bangbang: ``Server Welcome:`` User "
+                    f"{newUser.name}#{newUser.discriminator} "
+                    f"({newUser.id}) has joined. Could not send "
+                    "DM!"
+                )
+                await errorChannel.send(errorMsg)
+        else:
+            if joinLogEnabled and errorChannel:
+                await errorChannel.send(
+                    f":o: ``Server Welcome:`` User {newUser.name}#"
+                    f"{newUser.discriminator} ({newUser.id}) has "
+                    "joined. DM sent."
+                )
+                LOGGER.info(
+                    "User %s#%s (%s) has joined.  DM sent.",
+                    newUser.name,
+                    newUser.discriminator,
+                    newUser.id,
+                )
+
         return
 
     async def sendWelcomeMessage(self, newUser, test=False):
