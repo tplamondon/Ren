@@ -222,7 +222,9 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     @welcome.command(name="add")
     async def greetAdd(self, ctx: Context, name: str):
         """
-        Add a new greeting, please add name to the passed field. In the message, include '{USER}' for that to be replaced with a ping to the new user
+        Add a new greeting
+
+        Including {USER} in the message will have that replaced with a ping to the new user
 
         Parameters:
         -----------
