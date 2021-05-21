@@ -26,7 +26,7 @@ KEY_MESSAGE = "message"
 KEY_IMAGE = "image"
 KEY_GREETINGS = "greetings"
 KEY_WELCOME_CHANNEL = "welcomeChannel"
-KEY_WELCOME_CHANNEL_SET = "welcomeChannelSet"
+KEY_WELCOME_CHANNEL_ENABLED = "welcomeChannelSet"
 
 DEFAULT_GUILD = {
     KEY_DM_ENABLED: False,
@@ -39,7 +39,7 @@ DEFAULT_GUILD = {
     KEY_IMAGE: None,
     KEY_GREETINGS: [],
     KEY_WELCOME_CHANNEL: None,
-    KEY_WELCOME_CHANNEL_SET: False,
+    KEY_WELCOME_CHANNEL_ENABLED: False,
 }
 
 
@@ -65,7 +65,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     async def on_member_join(self, newMember: discord.Member):
         guild = newMember.guild
         await self.sendWelcomeMessageChannel(newMember, guild)
-        # await self.sendWelcomeMessage(newMember)
+        await self.sendWelcomeMessage(newMember)
 
     @commands.Cog.listener()
     async def on_member_remove(self, leaveMember: discord.Member):
