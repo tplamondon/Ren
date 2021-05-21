@@ -313,7 +313,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     @welcome.command(name="list", aliases=["ls"])
     async def greetList(self, ctx: Context):
         """
-        List's all the greetings on the server
+        List all greetings on the server
         """
         greetings = await self.config.guild(ctx.guild).greetings()
 
