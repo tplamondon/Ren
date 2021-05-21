@@ -28,6 +28,8 @@ KEY_GREETINGS = "greetings"
 KEY_WELCOME_CHANNEL = "welcomeChannel"
 KEY_WELCOME_CHANNEL_ENABLED = "welcomeChannelSet"
 
+MAX_MESSAGE_LENGTH = 2000
+
 DEFAULT_GUILD = {
     KEY_DM_ENABLED: False,
     KEY_LOG_JOIN_ENABLED: False,
@@ -243,7 +245,9 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
             await ctx.send("No response received, not setting anything!")
             return
 
-        if len(greeting.content) > 2048:
+        # check for if the message with a replaced {USER} will be too long
+        tempmsg = greeting.contents.replace("{USER}", "<@0000000000000000000>")
+        if len(tempmsg) > MAX_MESSAGE_LENGTH:
             await ctx.send("Your message is too long!")
             return
 
@@ -351,7 +355,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
             await ctx.send("No response received, not setting anything!")
             return
 
-        if len(message.content) > 2048:
+        if len(message.content) > MAX_MESSAGE_LENGTH:
             await ctx.send("Your message is too long!")
             return
 
