@@ -211,7 +211,7 @@ We hope you enjoy your stay~
 
     @checks.mod_or_permissions()
     @welcome.command(name="add")
-    async def greetAdd(self, ctx, name):
+    async def greetAdd(self, ctx: Context, name: str):
         """
         Add a new greeting, please add name to the passed field. In the message, include '{USER}' for that to be replaced with a ping to the new user
 
