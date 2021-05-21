@@ -276,7 +276,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     @welcome.command(name="remove", aliases=["delete", "del", "rm"])
     async def greetRemove(self, ctx: Context, name: str):
         """
-        Removes a greeting.
+        Remove a greeting
 
         Parameters:
         -----------
