@@ -58,7 +58,7 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         if not greetings:
             return "Welcome to the server {USER}"
         else:
-            return greetings[random.randint(0, numGreetings - 1)][1]
+            return random.choice(greetings)[1]
 
     # The async function that is triggered on new member join.
     @commands.Cog.listener()
