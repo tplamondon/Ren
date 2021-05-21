@@ -300,8 +300,8 @@ We hope you enjoy your stay~
         return
 
     @checks.mod_or_permissions()
-    @welcome.command(name="list")
-    async def greetList(self, ctx):
+    @welcome.command(name="list", aliases=["ls"])
+    async def greetList(self, ctx: Context):
         greetings = await self.config.guild(ctx.guild).greetings()
 
         if not greetings:
