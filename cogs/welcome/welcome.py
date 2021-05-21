@@ -37,7 +37,7 @@ DEFAULT_GUILD = {
     KEY_TITLE: "Welcome!",
     KEY_MESSAGE: "Welcome to the server! Hope you enjoy your stay!",
     KEY_IMAGE: None,
-    KEY_GREETINGS: [],
+    KEY_GREETINGS: {},
     KEY_WELCOME_CHANNEL: None,
     KEY_WELCOME_CHANNEL_ENABLED: False,
 }
@@ -229,25 +229,24 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
 
         greetings = await self.config.guild(ctx.guild).greetings()
 
-        for greetingTuple in greetings:
-            if greetingTuple[0] == name:
-                await ctx.send(
-                    warning(
-                        "This greeting already exists, overwrite it? Please type 'yes' to overwrite"
-                    )
+        if name in greetings:
+            await ctx.send(
+                warning(
+                    "This greeting already exists, overwrite it? Please type 'yes' to overwrite"
                 )
-                try:
-                    response = await self.bot.wait_for("message", timeout=30.0, check=check)
-                except asyncio.TimeoutError:
-                    await ctx.send("You took too long, not overwriting")
-                    return
+            )
+            try:
+                response = await self.bot.wait_for("message", timeout=30.0, check=check)
+            except asyncio.TimeoutError:
+                await ctx.send("You took too long, not overwriting")
+                return
 
-                if response.content.lower() != "yes":
-                    await ctx.send("Not overwriting the greeting")
-                    return
+            if response.content.lower() != "yes":
+                await ctx.send("Not overwriting the greeting")
+                return
+
         # save the greetings
-        saveGreeting = (name, greeting.content)
-        greetings.append(saveGreeting)
+        greetings[name] =  greeting.content
         await greeting.add_reaction("✅")
         await self.config.guild(ctx.guild).greetings.set(greetings)
         return
@@ -267,29 +266,29 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
             return message.author == ctx.message.author and message.channel == ctx.message.channel
 
         greetings = await self.config.guild(ctx.guild).greetings()
-
-        tuple = ()
-        for greetingTuple in greetings:
-            if greetingTuple[0] == name:
-                await ctx.send(
-                    warning(
-                        "Are you sure you wish to delete this greeting? Respond with 'yes' if yes"
-                    )
+        if name in greetings:
+            await ctx.send(
+                warning(
+                    "Are you sure you wish to delete this greeting? Respond with 'yes' if yes"
                 )
-                tuple = greetingTuple
-                try:
-                    response = await self.bot.wait_for("message", timeout=30.0, check=check)
-                except asyncio.TimeoutError:
-                    await ctx.send("You took too long, not deleting")
-                    return
+            )
+            try:
+                response = await self.bot.wait_for("message", timeout=30.0, check=check)
+            except asyncio.TimeoutError:
+                await ctx.send("You took too long, not deleting")
+                return
 
-                if response.content.lower() != "yes":
-                    await ctx.send("Not deleting")
-                    return
-        # delete the greeting
-        greetings.remove(tuple)
-        await ctx.send(f"{name} removed from list")
-        await self.config.guild(ctx.guild).greetings.set(greetings)
+            if response.content.lower() != "yes":
+                await ctx.send("Not deleting")
+                return
+
+        if name in greetings:
+            # delete the greeting
+            del greetings[name]
+            await ctx.send(f"{name} removed from list")
+            await self.config.guild(ctx.guild).greetings.set(greetings)
+        else:
+            ctx.send(f"{name} not in list of greetings")
         return
 
     @checks.mod_or_permissions()
