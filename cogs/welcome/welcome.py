@@ -79,6 +79,9 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
         welcomeID = await self.config.guild(guild).welcomeChannel()
         if welcomeIDSet and removedChannel.id == welcomeID:
             await self.config.guild(guild).welcomeChannelSet.set(False)
+            LOGGER.info(
+                "Changed guild's welcomeChannelSetFlag to false as channel was deleted"
+            )
         return
 
     async def sendWelcomeMessageChannel(self, newUser: discord.Member):
