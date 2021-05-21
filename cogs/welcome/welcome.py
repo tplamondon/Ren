@@ -260,7 +260,7 @@ We hope you enjoy your stay~
         return
 
     @checks.mod_or_permissions()
-    @welcome.command(name="remove")
+    @welcome.command(name="remove", aliases=["delete", "del", "rm"])
     async def greetRemove(self, ctx: Context, name: str):
         """
         Removes a greeting. Please pass name of greeting to remove
