@@ -273,11 +273,11 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     @welcome.command(name="remove", aliases=["delete", "del", "rm"])
     async def greetRemove(self, ctx: Context, name: str):
         """
-        Removes a greeting. Please pass name of greeting to remove
+        Removes a greeting.
 
         Parameters:
         -----------
-        name: name of the greeting
+        name: name of the greeting to remove
         """
 
         def check(message: discord.Message):
@@ -309,6 +309,9 @@ class Welcome(commands.Cog):  # pylint: disable=too-many-instance-attributes
     @checks.mod_or_permissions()
     @welcome.command(name="list", aliases=["ls"])
     async def greetList(self, ctx: Context):
+        """
+        List's all the greetings on the server
+        """
         greetings = await self.config.guild(ctx.guild).greetings()
 
         if not greetings:
