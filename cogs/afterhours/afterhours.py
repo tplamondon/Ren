@@ -3,6 +3,7 @@
 A special cog to handle the special cases for this channel.
 """
 import logging
+from datetime import datetime, timedelta
 import asyncio
 import discord
 from discord.ext import commands
@@ -11,8 +12,10 @@ from redbot.core.bot import Red
 from redbot.core.commands.context import Context
 
 AH_CHANNEL = "after-hours"
-DEFAULT_GUILD = {"channelId": None, "afterHoursChannelIds": []}
+DEFAULT_GUILD = {"channelId": None, "channelIds": {}, "afterHoursChannelIds": []}
 STARBOARD = "highlights"
+DELETE_TIME = 32 * 60 * 60
+SLEEP_TIME = 60 * 60
 
 
 class AfterHours(commands.Cog):
@@ -36,6 +39,43 @@ class AfterHours(commands.Cog):
                 logging.Formatter("%(asctime)s %(message)s", datefmt="[%d/%m/%Y %H:%M:%S]")
             )
             self.logger.addHandler(handler)
+        self.bgTask = self.bot.loop.create_task(self.backgroundLoop())
+
+    # Cancel the background task on cog unload.
+    def __unload(self):  # pylint: disable=invalid-name
+        self.logger.info("Unloading cog")
+        self.bgTask.cancel()
+
+    def cog_unload(self):
+        self.logger.info("Unloading cog")
+        self.__unload()
+
+    async def backgroundLoop(self):
+        """Background loop to garbage collect"""
+        while True:
+            self.logger.debug("Checking to see if we need to garbage collect")
+            for guild in self.bot.guilds:
+                self.logger.debug("Checking guild %s", guild.id)
+                async with self.config.guild(guild).channelIds() as channels:
+                    staleIds = []
+                    for channelId, data in channels.items():
+                        self.logger.debug("Checking channel ID %s", channelId)
+                        channel = discord.utils.get(guild.channels, id=int(channelId))
+                        if not channel:
+                            self.logger.error("Channel ID %s doesn't exist!", channelId)
+                            staleIds.append(channelId)
+                            continue
+                        creationTime = datetime.fromtimestamp(data["time"])
+                        self.logger.debug("Time difference = %s", datetime.now() - creationTime)
+                        if datetime.now() - creationTime > timedelta(seconds=DELETE_TIME):
+                            self.logger.info("Deleting channel %s (%s)", channel.name, channel.id)
+                            await channel.delete(reason="AfterHours purge")
+                            # Don't delete the ID here, this will be taken care of in
+                            # the delete listener
+                    for channelId in staleIds:
+                        self.logger.info("Purging stale channel ID %s", channelId)
+                        del channels[channelId]
+            await asyncio.sleep(SLEEP_TIME)
 
     async def getContext(self, channel: discord.TextChannel):
         """Get the Context object from a text channel.
@@ -96,6 +136,31 @@ class AfterHours(commands.Cog):
         else:
             await ctx.send(f":information_source: **{AH_CHANNEL} created, adding exceptions**")
 
+    async def makeWordFilterChanges(
+        self, ctx: Context, channel: discord.abc.GuildChannel, remove=False
+    ):
+        """Apply WordFilter changes.
+
+        Parameters
+        -----------
+        ctx: Context
+            The Context object in order to invoke commands
+        channel: discord.abc.GuildChannel
+            The channel to apply WordFilter changes to.
+        remove: bool
+            Indicate whether we want to remove the changes. Defaults to False.
+        """
+        self.logger.info("Applying/removing WordFilter exceptions, remove=%s", remove)
+        cog = self.bot.get_cog("WordFilter")
+        if not cog:
+            self.logger.error("WordFilter not loaded. skipping")
+            return
+
+        if remove:
+            await ctx.invoke(cog._channelRemove, channel=channel)
+        else:
+            await ctx.invoke(cog._channelAdd, channel=channel)
+
     @commands.Cog.listener("on_guild_channel_create")
     async def handleChannelCreate(self, channel: discord.abc.GuildChannel):
         """Listener to see if we need to add exceptions to a channel"""
@@ -113,8 +178,9 @@ class AfterHours(commands.Cog):
                 return
             await self.notifyChannel(ctx)
             await self.makeStarboardChanges(ctx, channel)
-            async with self.config.guild(channel.guild).afterHoursChannelIds() as channelIds:
-                channelIds.append(channel.id)
+            await self.makeWordFilterChanges(ctx, channel)
+            async with self.config.guild(channel.guild).channelIds() as channelIds:
+                channelIds[channel.id] = {"time": datetime.now().timestamp()}
 
     @commands.Cog.listener("on_guild_channel_delete")
     async def handleChannelDelete(self, channel: discord.abc.GuildChannel):
@@ -126,15 +192,16 @@ class AfterHours(commands.Cog):
         if not isinstance(channel, discord.TextChannel):
             return
 
-        async with self.config.guild(channel.guild).afterHoursChannelIds() as channelIds:
-            if channel.id in channelIds:
+        async with self.config.guild(channel.guild).channelIds() as channelIds:
+            if str(channel.id) in channelIds:
                 self.logger.info("%s detected, removing exceptions", AH_CHANNEL)
                 ctx = await self.getContext(channel)
                 if not ctx:
                     return
                 await self.notifyChannel(ctx, remove=True)
                 await self.makeStarboardChanges(ctx, channel, remove=True)
-                channelIds.remove(channel.id)
+                await self.makeWordFilterChanges(ctx, channel, remove=True)
+                del channelIds[str(channel.id)]
 
     @commands.group(name="afterhours")
     @commands.guild_only()
