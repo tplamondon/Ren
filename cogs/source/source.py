@@ -25,8 +25,6 @@ def messageBuilder(titleEnglish: str, anilistID: str, episode: str, similarity: 
     return message
 
 
-
-
 class Source(commands.Cog):
 
     tracemoe = None
@@ -34,13 +32,11 @@ class Source(commands.Cog):
     def __init__(self, bot: Red):
         self.tracemoe = tracemoepy.AsyncTrace()
 
-
     async def __unload(self):  # pylint: disable=invalid-name
         await self.tracemoe.aio_session.close()
 
     def cog_unload(self):
         asyncio.run(self.__unload())
-
 
     async def postSourceFunction(self, ctx, imageURL):
         """helper method"""
@@ -68,7 +64,6 @@ class Source(commands.Cog):
             await ctx.send(
                 "Empty image provided. Ensure image is provided as URL and points directly to png or jpg image"
             )
-
 
     @commands.group(name="source", invoke_without_command=True)
     async def sourceCommand(self, ctx):
