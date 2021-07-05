@@ -24,12 +24,14 @@ KEY_TIMEOUT = "timeout"
 KEY_WORDS = "words"
 KEY_WORDS_IGNORE = "ignoreWords"
 KEY_IGNORE = "ignoreChannelID"
+KEY_CHANNEL_IGNORE = "userIgnoreChannelID"
 
 BASE_GUILD_MEMBER = {
     KEY_BLACKLIST: [],
     KEY_TIMEOUT: DEFAULT_TIMEOUT,
     KEY_WORDS: [],
     KEY_WORDS_IGNORE: [],
+    KEY_CHANNEL_IGNORE: [],
 }
 
 BASE_GUILD = {
@@ -66,43 +68,6 @@ class Highlight(commands.Cog):
                 logging.Formatter("%(asctime)s %(message)s", datefmt="[%d/%m/%Y %H:%M:%S]")
             )
             self.logger.addHandler(handler)
-
-    async def _sleepThenDelete(self, msg, time):
-        await asyncio.sleep(time)  # pylint: disable=no-member
-        await msg.delete()
-
-    def _registerUser(self, guildId, userId):
-        """Checks to see if user is registered, and if not, registers the user.
-        If the user is already registered, this method will do nothing. If the
-        user is not, they will be initialized to contain an empty words list.
-
-        Parameters:
-        -----------
-        guildId: int
-            The guild ID for the user.
-        userId: int
-            The user ID.
-
-        Returns:
-        --------
-            None.
-        """
-        if guildId not in self.highlights.keys():
-            self.highlights[guildId] = {}
-
-        if userId not in self.highlights[guildId].keys():
-            self.highlights[guildId][userId] = {
-                KEY_WORDS: [],
-                KEY_BLACKLIST: [],
-                KEY_TIMEOUT: DEFAULT_TIMEOUT,
-            }
-            return
-
-        if KEY_BLACKLIST not in self.highlights[guildId][userId].keys():
-            self.highlights[guildId][userId][KEY_BLACKLIST] = []
-
-        if KEY_TIMEOUT not in self.highlights[guildId][userId].keys():
-            self.highlights[guildId][userId][KEY_TIMEOUT] = DEFAULT_TIMEOUT
 
     @commands.group(name="highlight", aliases=["hl"])
     @commands.guild_only()
@@ -476,6 +441,104 @@ class Highlight(commands.Cog):
         await ctx.send("Timeout set to {} seconds.".format(seconds), delete_after=DELETE_TIME)
         await ctx.message.delete()
 
+    @highlight.group(name="channelDeny", aliases=["cd"])
+    @commands.guild_only()
+    async def channelDeny(self, ctx: Context):
+        """Stops certain channels from triggering your highlight words"""
+
+    @channelDeny.command(name="add")
+    @commands.guild_only()
+    async def channelDenyAdd(self, ctx: Context, channel: discord.TextChannel):
+        """Add a channel to be blocked from triggering highlights
+
+        Parameters:
+        -----------
+        channel: discord.TextChannel
+            The channel you wish to block highlight triggers from.
+        """
+        guildId = ctx.guild.id
+        userId = ctx.author.id
+        channelId = channel.id
+
+        async with self.config.member(ctx.author).userIgnoreChannelID() as channelList:
+            if channelId in channelList:
+                await ctx.send("Channel is already being ignored!", delete_after=DELETE_TIME)
+                await ctx.message.delete()
+            else:
+                channelList.append(channel.id)
+                await ctx.send("Channel added to ignore list.", delete_after=DELETE_TIME)
+                await ctx.message.delete()
+
+    @channelDeny.command(name="remove", aliases=["rm"])
+    @commands.guild_only()
+    async def channelDenyRemove(self, ctx: Context, channel: discord.TextChannel):
+        """Remove a channel that was on the denylist and allow the channel to trigger highlights again
+
+        Parameters:
+        -----------
+        channel: discord.TextChannel
+            The channel you wish to receive highlights from again.
+        """
+        guildId = ctx.guild.id
+        userId = ctx.author.id
+        channelId = channel.id
+
+        async with self.config.member(ctx.author).userIgnoreChannelID() as channelList:
+            if channelId not in channelList:
+                await ctx.send("This channel wasn't previously blocked!", delete_after=DELETE_TIME)
+                await ctx.message.delete()
+            else:
+                channelList.remove(channelId)
+                await ctx.send(
+                    "Channel successfully removed from deny list.", delete_after=DELETE_TIME
+                )
+                await ctx.message.delete()
+
+    @channelDeny.command(name="list", aliases=["ls"])
+    @commands.guild_only()
+    async def channelDenyList(self, ctx: Context):
+        """Sends a DM with all of the channels you've stopped from triggering your highlights"""
+        userName = ctx.message.author.name
+
+        async with self.config.member(ctx.author).userIgnoreChannelID() as channelList:
+            if channelList:
+                msg = ""
+                serverChList = ctx.guild.channels
+                removedChannels = []
+                for channelId in channelList:
+                    # Flag that allows the bot to append channel Id if name not found
+                    # The channel ID can then be used for removal if they filtered a channel that was removed
+                    channelExist = False
+                    for serverChannel in serverChList:
+                        if channelId == serverChannel.id:
+                            msg += "{}\n".format(serverChannel.name)
+                            channelExist = True
+                    if not channelExist:
+                        # save channelId to be removed outside of loop
+                        removedChannels.append(channelId)
+                for channelId in removedChannels:
+                    channelList.remove(channelId)
+                embed = discord.Embed(description=msg, colour=discord.Colour.red())
+                embed.set_author(
+                    name=ctx.message.author.name, icon_url=ctx.message.author.avatar_url
+                )
+                try:
+                    await ctx.message.author.send(embed=embed)
+                except discord.Forbidden:
+                    await ctx.send(
+                        "{}, you do not have DMs enabled, please enable them!".format(
+                            ctx.message.author.mention
+                        ),
+                        delete_after=DELETE_TIME,
+                    )
+                else:
+                    await ctx.send("Please check your DMs.", delete_after=DELETE_TIME)
+            else:
+                await ctx.send(
+                    "Sorry {}, you have no channels on the deny list currently".format(userName),
+                    delete_after=DELETE_TIME,
+                )
+
     def _triggeredRecently(self, msg, uid, timeout=DEFAULT_TIMEOUT):
         """See if a user has been recently triggered.
 
@@ -582,6 +645,10 @@ class Highlight(commands.Cog):
             self.logger.debug("User ID: %s", currentUserId)
             isWordIgnored = False
 
+            # Handle case where message was sent in a user denied channel
+            if msg.channel.id in data[KEY_CHANNEL_IGNORE]:
+                continue
+
             # Handle case where user was at-mentioned.
             if currentUserId in [atMention.id for atMention in msg.mentions]:
                 continue
@@ -659,6 +726,10 @@ class Highlight(commands.Cog):
                 msgStillThere = True
         if not msgStillThere:
             return
+        # Embed Description has a max length of 2048
+        # If description is longer truncate to 2045 and append ... to it
+        if len(embedMsg) > 2048:
+            embedMsg = embedMsg[:2045] + "..."
         embed = discord.Embed(title=user.name, description=embedMsg, colour=discord.Colour.red())
         embed.add_field(name="Context", value="[Click to Jump]({})".format(msgUrl))
         time = message.created_at.replace(tzinfo=timezone.utc).astimezone(tz=None)
