@@ -34,7 +34,7 @@ async def postSourceFunction(ctx, imageURL):
         anilistID = f"{result.result[0].anilist.id}" or "No anilistID Found"
         episode = f"{result.result[0].episode}" or "No Episode Found"
         similarity = float(result.result[0].similarity) or 0
-        tracemoe.aio_session.close()
+        await tracemoe.aio_session.close()
 
         # send the message using messageBGuilder to build the message
         await ctx.send(messageBuilder(titleEnglish, anilistID, episode, similarity))
