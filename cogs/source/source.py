@@ -27,7 +27,6 @@ def messageBuilder(titleEnglish: str, anilistID: str, episode: str, similarity: 
 
 class Source(commands.Cog):
 
-    tracemoe = None
 
     def __init__(self, bot: Red):
         self.tracemoe = tracemoepy.AsyncTrace()
