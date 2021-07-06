@@ -26,8 +26,6 @@ def messageBuilder(titleEnglish: str, anilistID: str, episode: str, similarity: 
 
 
 class Source(commands.Cog):
-
-
     def __init__(self, bot: Red):
         self.bot = bot
         self.logger = logging.getLogger("red.eilacogs.Source")
