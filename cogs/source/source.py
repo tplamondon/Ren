@@ -49,7 +49,7 @@ class Source(commands.Cog):
                 episode = f"{result.result[0].episode}" or "No Episode Found"
                 similarity = float(result.result[0].similarity) or 0
 
-                # send the message using messageBGuilder to build the message
+                # send the message using messageBuilder to build the message
                 await ctx.send(messageBuilder(titleEnglish, anilistID, episode, similarity))
 
         except TooManyRequests:
